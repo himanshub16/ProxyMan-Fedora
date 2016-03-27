@@ -15,7 +15,7 @@ The following commands would help you out.
 ***********************************************
 
 --Do not use "sh" insted of "bash". The script would give errors, rather than working as desired.
--Make sure you have "sudo" privilege in order to set proxy settings for your package manager (apt, in this case).
+-Make sure you have "sudo" privilege in order to set proxy settings for your package manager (dnf, in this case).
 -You don't need to worry in case of Ubuntu and derivatives. However, if "sudo" permissions are not granted to you, you can get them or remove the keyword "sudo" from lines 126 and 194 and run the script as root. This would however, set the proxy settings for root user, in case of 'set'. Try 'sfew' or 'ufew' in such problematic cases.
 
 *************************************
@@ -25,7 +25,7 @@ The following commands would help you out.
 * toggle * this is same as changing the proxy mode from manual   *
 *        * to none in network settings. It changes the proxy     *
 *        * settings for your browser, and apps but not for the   *
-*        * software manager (apt), and command line applications.*
+*        * software manager (dnf), and command line applications.*
 *----------------------------------------------------------------*
 * set    * this is similar to setting up proxy settings on Ubuntu*
 *        * and then applying it system-wide. But, this script    *
