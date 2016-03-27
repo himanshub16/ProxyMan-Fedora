@@ -1,6 +1,7 @@
 #ProxyMan (for Linux)
 
 Author : Himanshu Shekhar < https://github.com/himanshushekharb16/ProxyMan/ >
+
 This version at < https://github.com/himanshushekharb16/ProxyMan-Fedora/ > is modified to work with dnf on Fedora.
 The version number is mentioned in the main.sh file.
 
