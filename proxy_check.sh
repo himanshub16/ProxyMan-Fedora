@@ -39,11 +39,11 @@ fi
 
 echo
 
-if [[ -e "/etc/apt/apt.conf" ]]; then
-	echo "This is apt.conf ..."
-	cat "/etc/apt/apt.conf"
+if [[ -e "/etc/dnf/dnf.conf" ]]; then
+	echo "This is dnf.conf ..."
+	cat "/etc/dnf/dnf.conf" | grep "proxy"
 else
-	echo "apt is not using proxy."
+	echo "dnf is not using proxy."
 fi
 
 echo
