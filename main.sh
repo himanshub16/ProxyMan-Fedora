@@ -31,6 +31,7 @@
 #           Ubuntu Forums
 #           Stack Exchange
 #			https://docs.fedoraproject.org/en-US/Fedora_Core/3/html/Software_Management_Guide/sn-yum-proxy-server.html
+#			http://dnf.readthedocs.org/en/latest/api_conf.html
 #			
 # and many more Google search links.
 #

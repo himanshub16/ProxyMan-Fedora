@@ -1,4 +1,7 @@
 #!/bin/bash
+# proxy_check v1.3
+# Imported from https://github.com/himanshushekharb16/proxychecker
+
 if [[ -e "$HOME/.bashrc" ]]; then
 	a=$(grep -i proxy $HOME/.bashrc | wc -l)
 	if [[ a -eq 0 ]]; then
