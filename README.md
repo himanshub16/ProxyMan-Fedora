@@ -14,6 +14,8 @@ Free software licensed under GNU GPL v2
 
 How to use this tool?
 =====================
+![How to use] (https://raw.githubusercontent.com/himanshub16/ProxyMan/master/howto.gif)
+
 Browse to the directory containing this tool and the following commands would help you out.
 
 bash main.sh : To set up/unset proxy settings
