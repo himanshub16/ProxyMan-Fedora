@@ -1,6 +1,6 @@
 #!/bin/bash
 # ProxyMan v1.7
-# Author : Himanshu Shekhar < https://github.com/himanshushekharb16/ProxyMan >
+# Author : Himanshu Shekhar < https://github.com/himanshub16/ProxyMan >
 # This code is modified for Fedora (22 onwards, versions which depend on dnf instead of yum)
 # Support for Fedora added on March 27, 2016, by original author.
 
