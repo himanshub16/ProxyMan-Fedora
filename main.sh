@@ -1,5 +1,5 @@
 #!/bin/bash
-# ProxyMan v1.7
+# ProxyMan v1.9
 # Author : Himanshu Shekhar < https://github.com/himanshub16/ProxyMan >
 # This code is modified for Fedora (22 onwards, versions which depend on dnf instead of yum)
 # Support for Fedora added on March 27, 2016, by original author.
@@ -96,9 +96,9 @@ configure_environment() {
 	read -p "modify /etc/environment ? (y/n)" -e 
 	if [[ $REPLY = 'y' ]]; then
 		if [[ -e "/etc/environment" ]]; then
-			sudo cat ./bash_set.conf >> "/etc/environment"
+			cat bash_set.conf | sudo tee -a "/etc/environment" > /dev/null
 		else 
-			cat ./bash_set.conf > "/etc/environment"
+			cat bash_set.conf | sudo tee -a "/etc/environment" > /dev/null
 		fi
 	fi
 }
@@ -117,11 +117,14 @@ configure_dnf() {
 		echo "proxy_password=$6" >> fedora_config.conf
 	fi
 
-	sudo cat "fedora_config.conf" >> "/etc/dnf/dnf.conf"
+	cat "fedora_config.conf" | sudo tee -a "/etc/dnf/dnf.conf" > /dev/null
 }
 
 configure_gsettings() {
 # configure_gsettings $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
+	if [[ "$gsettingsavailable" = '' ]];then
+		return
+	fi
 	gsettings set org.gnome.system.proxy mode 'manual'
 	if [[ $4 == "y" ]]; then
 		gsettings set org.gnome.system.proxy use-same-proxy true
@@ -157,6 +160,28 @@ configure_gsettings() {
 	fi
 }
 
+configure_npm() {
+	# configure_npm $http_host $http_port $use_auth $use_same $username $password $https_host $https_post
+	echo "1: $1, 2: $2, 3: $3, 4: $4, 5: $5, 6: $6, 7: $7, 8: $8"
+	if [ "$4" = "y" ]; then
+		if [ "$3" = "y" ]; then
+			npm config set proxy "http://$5:$6@$1:$2/"
+			npm config set https-proxy "https://$5:$6@$1:$2/"
+		else
+			npm config set proxy "http://$1:$2/"
+			npm config set proxy "https://$1:$2/"
+		fi
+	else
+		if [ "$3" = "y" ]; then
+			npm config set proxy "http://$5:$6@$1:$2/"
+			npm config set https-proxy "https://$5:$6@$7:$8/"
+		else
+			npm config set proxy "http://$1:$2/"
+			npm config set proxy "https://$7:$8/"
+		fi
+	fi
+}
+
 unset_environment() {
 	# unset all environment variables from bash_profile and bashrc
 	if [[ -e "$HOME/.bash_profile" ]]; then
@@ -188,6 +213,9 @@ unset_environment() {
 }
 
 unset_gsettings() {
+	if [[ "$gsettingsavailable" = '' ]];then
+		return
+	fi
 	gsettings set org.gnome.system.proxy mode 'none'
 	gsettings set org.gnome.system.proxy.http use-authentication false
 	gsettings set org.gnome.system.proxy.http authentication-user "''"
@@ -196,9 +224,23 @@ unset_gsettings() {
 
 unset_dnf() {
 	if [[ -e "/etc/dnf/dnf.conf" ]]; then
-		sed -i '/proxy/d' /etc/dnf/dnf.conf
+		case "$superusermethod" in
+		0)	echo "You need sudo/root privileges"
+			return
+			;;
+		1)	sudo sed -i '/proxy/d' /etc/dnf/dnf.conf
+			;;
+		2)	sed -i '/proxy/d' /etc/dnf/dnf.conf
+			;;
+		esac
 	fi
 }
+
+unset_npm() {
+	npm config rm proxy
+	npm config rm https-proxy
+}
+
 
 set_parameters() {
 	echo "Set parameters received" $1
@@ -231,12 +273,15 @@ set_parameters() {
 		configure_dnf $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
 		configure_gsettings $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
 		configure_environment $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
+		configure_npm $http_host $http_port $use_auth $use_same $username $password $https_host $https_port
 	elif [[ $1 -eq 1 ]]; then
 		configure_environment $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
 	elif [[ $1 -eq 2 ]]; then
 		configure_gsettings $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
 	elif [[ $1 -eq 3 ]]; then
 		configure_dnf $http_host $http_port $use_auth $use_same $username $password $https_host $https_port $ftp_host $ftp_port $socks_host $socks_port
+	elif [[ $1 -eq 4 ]]; then 
+		configure_npm $http_host $http_port $use_auth $use_same $username $password $https_host $https_port
 	else
 		echo "Invalid arguments! ERROR encountered."
 		exit 1
@@ -251,7 +296,7 @@ echo "
 MESSAGE : In case of options, one value is displayed as the default value.
 Do erase it to use other value.
 
-ProxyMan v1.7
+ProxyMan v1.9
 This script is documented in README.md file.
 
 There are the following options for this script
@@ -284,9 +329,40 @@ else
 	exit 1
 fi
 
+# check for possibilities if sudo is not available or sudo is not configured
+sudoperms=false
+sudoavailable="$(which sudo)"
+superusermethod=0
+# 1 means sudo, 2 means is root user, 0 means can't be super user... a lame one
+if [[ "$sudoavailable" = '' ]]; then
+	sudoavailable=false
+	if [[ "$USER" = 'root' ]]; then
+		superusermethod=2
+	else
+		superusermethod=0
+	fi
+else
+	sudoavailable=true
+	sudo -v &> /dev/null && sudoperms="true" || sudoperms="false"
+	if [[ "$sudoperms" = "true" ]]; then
+		superusermethod=1
+	else
+		superusermethod=0
+	fi
+fi
+
+gsettingsavailable="$(which gsettings)"
+npmavailable="$(which npm)"
+
+
 # take inputs and perform as necessary
 case "$choice" in 
-	toggle) mode=$(gsettings get org.gnome.system.proxy mode)
+	toggle) if [[ "$gsettingsavailable" = '' ]]; then
+			echo "Desktop environment proxy settings are available for GNOME based environments."
+			echo "Please refer to the conventional GUI method for your DE."
+			break
+		fi
+		mode=$(gsettings get org.gnome.system.proxy mode)
 		if [ $mode == "'none'" ]; then
 			gsettings set org.gnome.system.proxy mode 'manual'
 		elif [ $mode == "'manual'" ]; then
@@ -309,20 +385,28 @@ case "$choice" in
 		fi
 		echo "Operation completed successfully."
 		;;
-	set)
+	set)	if [[ "$gsettingsavailable" != '' ]]; then
+			unset_gsettings
+		fi
 		unset_gsettings
 		unset_environment	
 		set_parameters ALL
 		;;
-	unset)	unset_gsettings
-			unset_dnf
-			unset_environment
+	unset)	if [[ "$gsettingsavailable" != '' ]]; then
+			unset_gsettings
+		fi
+		unset_dnf
+		unset_environment
+		if [[ "$npmavailable" != '' ]]; then
+			unset_npm
+		fi
 		;;
 	sfew)	echo 
 			echo "Where do you want to set proxy?"
 			echo "1 : Terminal only."
 			echo "2 : Desktop-environment/GUI and apps"
 			echo "3 : dnf/Software Center only"
+			echo "4 : npm proxy settings only"
 			read response
 			if [[ $response -gt 3 ]]; then
 				echo "Invalid option."
@@ -335,7 +419,8 @@ case "$choice" in
 			echo "Where do you want to unset proxy?"
 			echo "1 : Terminal only."
 			echo "2 : Desktop-environment/GUI and apps"
-			echo "3 : dnf/Setoftware Center only"
+			echo "3 : dnf/Software Center only"
+			echo "4 : npm proxy settings only"
 			read 
 			case $REPLY in 
 				1) unset_environment

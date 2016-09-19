@@ -51,14 +51,27 @@ fi
 
 echo
 
-mode=$(gsettings get org.gnome.system.proxy mode)
-if [[ $mode == "'none'" ]]; then
-	echo "The desktop environment is not using any proxy settings."
-	echo "Thus, gsettings configurations are ineffective."
-elif [[ $mode == "'manual'" ]]; then
-	echo "The desktop environment is using manual proxy settings."
-	echo "Thus, following gsettings configurations are effective."
-	gsettings list-recursively org.gnome.system.proxy
-else
-	echo "We cannot determine the type of settings. Sorry :("
+gsettingsavailable="$(which gsettings)"
+if [ $gsettingsavailable != '' ]; then
+	mode=$(gsettings get org.gnome.system.proxy mode)
+	if [ $mode == "'none'" ]; then
+		echo "The desktop environment is not using any proxy settings."
+		echo "Thus, gsettings configurations are ineffective."
+	elif [ $mode == "'manual'" ]; then
+		echo "The desktop environment is using manual proxy settings."
+		echo "Thus, following gsettings configurations are effective."
+		gsettings list-recursively org.gnome.system.proxy
+	else
+		echo "We cannot determine the type of settings. Sorry :("
+	fi
+fi
+
+echo
+
+npmavailable="$(which npm)"
+if [ $npmavailable != '' ]; then
+	echo -n "npm http proxy:  " 
+	npm config get proxy
+	echo -n "npm https proxy:  "
+	npm config get https-proxy
 fi
