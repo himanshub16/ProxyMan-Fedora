@@ -1,6 +1,18 @@
 ProxyMan changelog
 ===============================================================
 
+## v1.9 : Ninth release : September 19, 2017
+---------------------------------------------------------------
+* Options added to set user's npm proxy
+
+## v1.8 : Eighth release : August 12, 2016
+---------------------------------------------------------------
+* Checks added for sudo permissions before performing root ops.
+* If user is already root, there's no need of sudo.
+* tee used to cat to root owned files, as it caused errors. @yasn77
+* check added for gsettings to avoid error messages on systems not 
+  using gsettings ( are not gnome based )
+
 ## v1.7 : Seventh release : March 13, 2016
 ---------------------------------------------------------------
 * unset_environment forced before setting environment / Terminal proxy
